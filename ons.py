@@ -266,7 +266,6 @@ for contenido_on in ons:
     df=txt_a_df(contenido_on,tickers)
     master_df=pd.concat([master_df,df])
 
-previous_csv=pd.read_csv("cotizaciones_historicas_al_04-06-2023.csv")
 master_df=pd.concat([previous_csv,master_df]).drop_duplicates()
 
 today=date.today().strftime("%d-%m-%Y")
