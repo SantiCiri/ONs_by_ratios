@@ -1,9 +1,10 @@
 # ONs_by_ratios
 Mini repo that webscrapps information from argentinean obligaciones negociables and calculates ratios to asess their buy and sell for oportunities.
-Notebook is straightforward and should be executed completly every time. Make sure you complete the comprado list with the tickers you already own.
+Executing .py to run the program under the hood. See notebook to check the details step by step.
+
 The pdf download is still to be optimized, so it is highly recommended that not many days go by without running it. Else, you'll debug the first cells.
 
-.py is there to automate the webscrap run and .csv update. To run it at 23hs, on linux, just type on cmd:
+To run it at 23hs, on linux, just type on cmd:
 
 crontab -e
 
