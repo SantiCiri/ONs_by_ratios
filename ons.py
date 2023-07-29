@@ -16,6 +16,8 @@ import glob
 from datetime import datetime, timedelta
 import urllib.request
 from tqdm import tqdm
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 # Descarga lo que falta desde el ultimo informe a la fecha
@@ -80,7 +82,7 @@ directorio_descargas=os.path.join(os.getcwd(),"descargas")
 # Iterate over the iterable_dates
 for day in iterable_dates:
     # Iterate over the range of variables
-    for k in range(variable,variable+2):
+    for k in range(variable,variable+5):
         # Iterate over the range of final values
         for final in range(ultimo_informe,ultimo_informe+(len(iterable_dates)*10)):
             try:
@@ -270,6 +272,7 @@ master_df=pd.concat([previous_csv,master_df]).drop_duplicates()
 
 today=date.today().strftime("%d-%m-%Y")
 csv_name=f"cotizaciones_historicas_al_{today}.csv"
+master_df = master_df[master_df.columns.drop(list(master_df.filter(regex='Unnamed')))]
 master_df.to_csv(csv_name)
 
 
@@ -318,7 +321,7 @@ master_df['FECH_ULT_COT'] = pd.to_datetime(master_df['FECH_ULT_COT'], format='%d
 # Elimina el último carácter de cada valor en la columna 'TIR_ANUAL' para eliminar el símbolo de porcentaje
 master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].str[:-1]
 # Convierte los valores en la columna 'TIR_ANUAL' a números de punto flotante (float), y asigna None a los valores vacíos o nulos
-master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].apply(lambda x: float(x) if x else None)
+master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].apply(lambda x: float(x) if (x and x!="**") else None)
 # Crea un gráfico de dispersión utilizando los datos del DataFrame 'master_df', utilizando la columna 'FECH_ULT_COT' como eje x, la columna 'TIR_ANUAL' como eje y, y la columna 'TICKER' para asignar colores a los puntos en el gráfico
 fig = px.scatter(master_df, x='FECH_ULT_COT', y="TIR_ANUAL",color="TICKER")
 # Show the plot
@@ -340,7 +343,7 @@ comprado=["YCA6O"]
 cocientes=pd.DataFrame(columns=["FECH_ULT_COT"])
 #agarra el df de antes (el master que tiene toda la info de los tickers historicos y hace una pivot donde pone los tickers en las columnas, las fechas en las filas y los valores de tir en los valores)
 tirs=pd.pivot_table(master_df, values="TIR_ANUAL", index="FECH_ULT_COT", columns="TICKER", aggfunc='mean', fill_value=None).reset_index()
-
+"""
 #Para cada ticker
 for ticker in tickers:
     #Y parada ticker comprado
@@ -366,5 +369,42 @@ for ticker in tickers:
             fig.show()
             
         else: alert=""
-        
+"""        
 
+all_figures = []
+titles=[]
+for ticker in tickers:
+        #crea un df vacio que solo tiene la columna FECH_ULT_COT
+        cocientes=pd.DataFrame(columns=["FECH_ULT_COT"])
+        #Y la llena con las fechas de las que tenemos informacion de tirs
+        cocientes["FECH_ULT_COT"]=tirs["FECH_ULT_COT"]
+        #Crea una columna llamada ticker/ticker_comprado que contiene ese cociente
+        cocientes[f"TIR"]=tirs[ticker]
+        # Calcula el promedio del cociente
+        cocientes['Mean']= cocientes["TIR"].mean()
+        # Calcula la media + 2 desvios estándar
+        cocientes['Mean-2DE']= cocientes['Mean']- (2 * cocientes["TIR"].std())
+        # Calcula la media - 2 desvios estándar
+        cocientes['Mean+2DE']= cocientes['Mean'] + (2 * cocientes["TIR"].std())
+        df["FECH_ULT_COT"]=pd.to_datetime(df['FECH_ULT_COT'])
+        alert="###### OPORTUNIDAD DE COMPRA ###### OPORTUNIDAD DE COMPRA ###### OPORTUNIDAD DE COMPRA ######"
+        fig = px.scatter(cocientes, x='FECH_ULT_COT', y=['Mean-2DE','Mean+2DE',"TIR"],title=f"{ticker}    {alert}")
+        all_figures.append(fig)
+        titles.append(f"TIR de {ticker}")
+        #Si el cociente de hoy es mas grande que el promedio historico + 2 DE, entonces imprime una alerta en el titulo del gráfico
+        if cocientes["TIR"].iloc[-1]>cocientes['Mean+2DE'].iloc[-1] and today in df['FECH_ULT_COT'].dt.date.values:
+            fig.show()
+
+# Crea un subploteo con una sola columna para poner los gráficos uno debajo del otro
+fig_subplots = make_subplots(rows=len(all_figures), cols=1)
+# Agrega cada figura al subploteo
+for i, fig in enumerate(all_figures):
+    for trace in fig['data']:
+        fig_subplots.add_trace(trace, row=i + 1, col=1)
+# Actualiza los títulos de los ejes y para que se muestren correctamente en el subploteo
+for i, title in enumerate(titles):
+    fig_subplots.update_yaxes(title_text=title, row=i + 1, col=1)
+# Actualiza el layout del subploteo para que los gráficos no se superpongan
+fig_subplots.update_layout(height=500 * len(all_figures), title_text="TIRs por TICKER")
+# Guarda los gráficos en un archivo .html
+fig_subplots.write_html("plots.html")
