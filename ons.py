@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+    #!/usr/bin/env python
 # coding: utf-8
 
 # In[1]:
@@ -386,7 +386,7 @@ for ticker in tickers:
         cocientes['Mean-2DE']= cocientes['Mean']- (2 * cocientes["TIR"].std())
         # Calcula la media - 2 desvios estándar
         cocientes['Mean+2DE']= cocientes['Mean'] + (2 * cocientes["TIR"].std())
-        df["FECH_ULT_COT"]=pd.to_datetime(df['FECH_ULT_COT'])
+        cocientes["FECH_ULT_COT"]=pd.to_datetime(cocientes['FECH_ULT_COT'])
         alert="###### OPORTUNIDAD DE COMPRA ###### OPORTUNIDAD DE COMPRA ###### OPORTUNIDAD DE COMPRA ######"
         fig = px.scatter(cocientes, x='FECH_ULT_COT', y=['Mean-2DE','Mean+2DE',"TIR"],title=f"{ticker}    {alert}")
         all_figures.append(fig)
