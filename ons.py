@@ -191,7 +191,6 @@ def txt_a_df(contenido_on,tickers):
                                "PARIDAD_PERC","TIR_ANUAL","DM","PPV"])
     try:
         for row in contenido_on:
-
                 for ticker in tickers:
                     if ticker in row:
                         b=row.split(ticker)
@@ -321,7 +320,7 @@ master_df['FECH_ULT_COT'] = pd.to_datetime(master_df['FECH_ULT_COT'], format='%d
 # Elimina el último carácter de cada valor en la columna 'TIR_ANUAL' para eliminar el símbolo de porcentaje
 master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].str[:-1]
 # Convierte los valores en la columna 'TIR_ANUAL' a números de punto flotante (float), y asigna None a los valores vacíos o nulos
-master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].apply(lambda x: float(x) if (x and x!="**") else None)
+master_df['TIR_ANUAL'] = master_df['TIR_ANUAL'].apply(lambda x: float(x) if x not in {"", "**", "*", "-"} else None)
 # Crea un gráfico de dispersión utilizando los datos del DataFrame 'master_df', utilizando la columna 'FECH_ULT_COT' como eje x, la columna 'TIR_ANUAL' como eje y, y la columna 'TICKER' para asignar colores a los puntos en el gráfico
 fig = px.scatter(master_df, x='FECH_ULT_COT', y="TIR_ANUAL",color="TICKER")
 # Show the plot
